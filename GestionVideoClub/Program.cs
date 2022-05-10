@@ -234,7 +234,7 @@ namespace GestionVideoClub
 
         private static void AgregarCliente()
         {
-
+        AgregarCliente:
             Console.WriteLine("Ingrese el nombre.");
             string nombre = Console.ReadLine();
             Console.WriteLine("Ingrese el apellido.");
@@ -243,16 +243,24 @@ namespace GestionVideoClub
             string direccion = Console.ReadLine();
             Console.WriteLine("Ingrese el documento de identidad.");
             string documento = Console.ReadLine();
-            Console.WriteLine("Ingrese el correo.");
-            string correo = Console.ReadLine();
-            Console.WriteLine("Ingrese el teléfono.");
-            string telefono = Console.ReadLine();
+
             using (var context = new PRG3_EF_PR1())
             {
                 using (var transaction = context.Database.BeginTransaction())
                 {
                     try
                     {
+                        var cliente = context.Clientes.Any(persona => persona.DocumentoIdentidad == documento);
+                        if (cliente)
+                        {
+                            Console.WriteLine("El cliente ya se encuentra registrado. Pulse una tecla para continuar.");
+                            Console.ReadKey();
+                            goto AgregarCliente;
+                        }
+                        Console.WriteLine("Ingrese el correo.");
+                        string correo = Console.ReadLine();
+                        Console.WriteLine("Ingrese el teléfono.");
+                        string telefono = Console.ReadLine();
                         Clientes nuevoCliente = new Clientes()
                         {
                             Nombre = nombre,
@@ -283,13 +291,11 @@ namespace GestionVideoClub
         }
         private static void AgregarPelicula()
         {
-
+        AgregarPelicula:
+            Console.Clear();
             Console.WriteLine("Ingrese el título.");
-            string titulo = Console.ReadLine();
-            Console.WriteLine("Ingrese el año.");
-            int anio = int.Parse(Console.ReadLine());
-            Console.WriteLine("Ingrese la calificación.");
-            int calificacion = int.Parse(Console.ReadLine());
+            string titulo = Console.ReadLine().ToLower();
+
 
             using (var context = new PRG3_EF_PR1())
             {
@@ -297,6 +303,24 @@ namespace GestionVideoClub
                 {
                     try
                     {
+                        var pelicula = context.Peliculas.Any(peli => peli.Titulo.ToLower() == titulo);
+                        if (pelicula)
+                        {
+                            Console.WriteLine("La película ya se encuentra ingresada. Pulse una tecla para continuar.");
+                            Console.ReadKey();
+                            goto AgregarPelicula;
+                        }
+                        Console.WriteLine("Ingrese el año.");
+                        int anio = int.Parse(Console.ReadLine());
+                    PedirCalificacion:
+                        Console.WriteLine("Ingrese la calificación.");
+                        int calificacion = int.Parse(Console.ReadLine());
+                        if (calificacion < 1 || calificacion > 10)
+                        {
+                            Console.WriteLine("La calificación debe ser del 1 al 10. Pulse una tecla para continuar.");
+                            Console.ReadKey();
+                            goto PedirCalificacion;
+                        }
                         Peliculas nuevaPelicula = new Peliculas()
                         {
                             Titulo = titulo,
@@ -325,13 +349,10 @@ namespace GestionVideoClub
 
         private static void AgregarCopia()
         {
-
+        AgregarCopia:
             Console.WriteLine("Ingrese el ID de la película.");
             long idPelicula = long.Parse(Console.ReadLine());
-            Console.WriteLine("Ingrese el formato.");
-            string formato = Console.ReadLine();
-            Console.WriteLine("Ingrese el precio del alquiler.");
-            double precioAlquiler = double.Parse(Console.ReadLine());
+
 
             using (var context = new PRG3_EF_PR1())
             {
@@ -339,6 +360,17 @@ namespace GestionVideoClub
                 {
                     try
                     {
+                        var copia = context.Copias.Any(copy => copy.Id == idPelicula);
+                        if (copia)
+                        {
+                            Console.WriteLine("La copia ya se encuentra ingresada. Pulse una tecla para continuar.");
+                            Console.ReadKey();
+                            goto AgregarCopia;
+                        }
+                        Console.WriteLine("Ingrese el formato.");
+                        string formato = Console.ReadLine();
+                        Console.WriteLine("Ingrese el precio del alquiler.");
+                        double precioAlquiler = double.Parse(Console.ReadLine());
                         Copias nuevaCopia = new Copias()
                         {
                             IdPelicula = idPelicula,
@@ -421,7 +453,7 @@ namespace GestionVideoClub
 
         private static void MarcarEntrega()
         {
-
+        MarcarEntrega:
             Console.WriteLine("Ingrese el ID de alquiler.");
             long idAlquiler = long.Parse(Console.ReadLine());
 
@@ -431,6 +463,13 @@ namespace GestionVideoClub
                 {
                     try
                     {
+                        var chequearEntrega = context.Alquileres.Any(alquiler => alquiler.Id == idAlquiler && alquiler.FechaEntregada != null);
+                        if (chequearEntrega)
+                        {
+                            Console.WriteLine("El alquiler ya fue marcado como entregado.");
+                            goto MarcarEntrega;
+                        }
+
                         var alquilerParaMarcar = context.Alquileres.FirstOrDefault(alquiler => alquiler.Id == idAlquiler);
 
                         alquilerParaMarcar.FechaEntregada = DateTime.Now;
@@ -500,7 +539,7 @@ namespace GestionVideoClub
         {
 
             string inputUsuario = string.Empty;
-            var menu = new List<string> { "a", "b", "c", "d", "e", "f", "g", "0"};
+            var menu = new List<string> { "a", "b", "c", "d", "e", "f", "g", "0" };
             do
             {
                 Console.WriteLine("Ingrese la opcion deseada");
@@ -591,7 +630,7 @@ namespace GestionVideoClub
                 // Lista de todos los alquileres
                 var alquileres = context.Alquileres.ToList();
 
-                
+
                 foreach (var alquiler in alquileres)
                 {
                     Console.WriteLine($"Película: {alquiler.Copias.Peliculas.Titulo} Formato: {alquiler.Copias.Formato} Cliente: {alquiler.Clientes.Nombre} {alquiler.Clientes.Apellido} Tel: {alquiler.Clientes.Telefono} Mail: {alquiler.Clientes.Correo} ID: {alquiler.Clientes.Id}");
@@ -615,8 +654,8 @@ namespace GestionVideoClub
                 // Recorro stock y pregunto si cada copia está en la lista de alquileres pendientes de entrega.
                 foreach (var alquiler in alquilerPorCliente)
                 {
-                    
-                        Console.WriteLine($"ID:{alquiler.Id} Pelicula: {alquiler.Copias.Peliculas.Titulo} Fecha Alquiler: {alquiler.FechaAlquiler.ToString()} Fecha Tope: {alquiler.FechaTope} Estado: {ActivoOEntregado(alquiler.FechaEntregada)}");
+
+                    Console.WriteLine($"ID:{alquiler.Id} Pelicula: {alquiler.Copias.Peliculas.Titulo} Fecha Alquiler: {alquiler.FechaAlquiler.ToString()} Fecha Tope: {alquiler.FechaTope} Estado: {ActivoOEntregado(alquiler.FechaEntregada)}");
 
                 }
 
@@ -662,7 +701,7 @@ namespace GestionVideoClub
 
         private static string ActivoOEntregado(DateTime? fechaEntrega)
         {
-            if (fechaEntrega==null)
+            if (fechaEntrega == null)
             {
                 return "ACTIVO";
             }
